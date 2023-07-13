@@ -1,12 +1,19 @@
 import javax.swing.*;
 import javax.script.ScriptEngineManager;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Scanner;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 
 public class Main {
 
@@ -17,77 +24,192 @@ public class Main {
     public static ScriptEngineManager manager = new ScriptEngineManager();
     public static ScriptEngine engine = manager.getEngineByName("js");
     public static JTextArea textArea = new JTextArea();
+    public static boolean autoLog = false;
     public static int runcount = 0;
-    public static void main(String[] args) throws ScriptException {
+    public static JTextField jTextField = new JTextField();
+    public static JTextField jTextField2 = new JTextField();
 
+    public static void main(String[] args) throws ScriptException {
         ArrayList<String> output = new ArrayList<>();
 
-        JFrame jframe = new JFrame("4eq10");
+        JFrame jframe = new JFrame("4eq10GUI");
         jframe.setResizable(false);
         textArea.setEditable(false);
         jframe.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         JPanel jpanel = new JPanel();
-        JPanel jpanelBottom = new JPanel();
-        JLabel jlabel1 = new JLabel();
-        JLabel jlabel2 = new JLabel();
+        JPanel jpanelBottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton jbutton = new JButton();
         JButton jbutton2 = new JButton();
-        JTextField jTextField = new JTextField();
-        JTextField jTextField2 = new JTextField();
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+
         JMenuBar menuBar = new JMenuBar();
+
         JMenu helpMenu = new JMenu("Options");
         helpMenu.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        JMenuItem helpItem2 = new JMenuItem();
-        helpItem2.setText("Help");
-        helpItem2.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        helpMenu.add(helpItem2);
+        JMenuItem helpItem6 = new JMenuItem();
+        helpItem6.setText("Save output as ...");
+        helpItem6.setToolTipText("<html><font face=\"sansserif\">Saves the output of<br>the program in a file.</font></html>");
+        helpItem6.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        helpMenu.add(helpItem6);
         JMenuItem helpItem3 = new JMenuItem();
         helpItem3.setText("About");
         helpItem3.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         helpMenu.add(helpItem3);
+        JMenuItem helpItem5 = new JMenuItem();
+        helpItem5.setText("Exit");
+        helpItem5.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        helpMenu.add(helpItem5);
         menuBar.add(helpMenu);
+
+        JMenu helpMenu2 = new JMenu("Logging");
+        helpMenu2.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        JMenuItem helpItem4 = new JMenuItem();
+        helpItem4.setText("Auto-Log: " + (autoLog ? "Enabled" : "Disabled"));
+        helpItem4.setToolTipText("<html><font face=\"sansserif\">Click to " + (!autoLog ? "Enable" : "Disable") + ".<br>Enables whether the program should<br>automatically log the output in a logfile.</font></html>");
+        helpItem4.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        helpMenu2.add(helpItem4);
+        menuBar.add(helpMenu2);
+
+        jTextField.setForeground(Color.LIGHT_GRAY);
+        jTextField.setText("1234");
         jTextField.setColumns(4);
-        jTextField2.setColumns(5);
-        jlabel1.setText("Numbers: ");
-        jlabel2.setText("Exclude: ");
+        jTextField.setToolTipText("<html><font face=\"sansserif\">Enter 4 numbers</font></html>");
+
+        jTextField2.setForeground(Color.LIGHT_GRAY);
+        jTextField2.setText("+-*/");
+        jTextField2.setColumns(4);
+        jTextField2.setToolTipText("<html><font face=\"sansserif\">Valid operators to exclude are:<br>+ - * /</font></html>");
+
         jbutton.setText("Calculate");
+        jbutton.setToolTipText("<html><font face=\"sansserif\">Calculate solutions for<br>the input parameters.</font></html>");
         jbutton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        jbutton.setForeground(Color.BLACK);
+        jbutton.setBackground(Color.WHITE);
+
         jbutton2.setText("Clear");
+        jbutton2.setToolTipText("<html><font face=\"sansserif\">Clear the output field.</font></html>");
         jbutton2.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        jbutton2.setForeground(Color.BLACK);
+        jbutton2.setBackground(Color.WHITE);
+
         jframe.add(BorderLayout.CENTER, jpanel);
-        jpanelBottom.add(jlabel1);
+
         jpanelBottom.add(jTextField);
-        jpanelBottom.add(jlabel2);
         jpanelBottom.add(jTextField2);
         jpanelBottom.add(jbutton);
         jpanelBottom.add(jbutton2);
+
         jframe.add(BorderLayout.SOUTH, jpanelBottom);
         jframe.add(BorderLayout.NORTH, menuBar);
-        JTextArea textArea = new JTextArea(11, 40);
+
+        JTextArea textArea = new JTextArea(11, 24);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
         textArea.setEditable(false);
+
         JScrollPane scrollPane = new JScrollPane(textArea);
         jpanel.add(scrollPane);
 
-        JFrame jframe3 = new JFrame("Help");
-        jframe3.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-        jframe3.setResizable(false);
-        JLabel j3label = new JLabel();
-        j3label.setText("Enter your Numbers in: \"Numbers\"");
-        j3label.setBorder(new EmptyBorder(20, 20, 0, 20));
-        JLabel j3label2 = new JLabel();
-        j3label2.setText("Enter the operators to exclude in \"Exclude\"");
-        j3label2.setBorder(new EmptyBorder(0, 20, 20, 20));
-        jframe3.add(BorderLayout.NORTH, j3label);
-        jframe3.add(BorderLayout.SOUTH, j3label2);
+        jTextField.addFocusListener(new FocusListener() {
 
-        helpItem2.addActionListener(
+            @Override
+            public void focusGained(FocusEvent e) {
+                if(jTextField.getText().contains("1234") && jTextField.getForeground().equals(Color.LIGHT_GRAY)){
+                    jTextField.setText(null);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if(jTextField.getText().isEmpty()){
+                    jTextField.setText("1234");
+                    jTextField.setForeground(Color.LIGHT_GRAY);
+                }else{
+                    jTextField.setForeground(Color.BLACK);
+                }
+            }
+        });
+
+        jTextField2.addFocusListener(new FocusListener() {
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                if(jTextField2.getText().contains("+-*/") && jTextField2.getForeground().equals(Color.LIGHT_GRAY)){
+                    jTextField2.setText(null);
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if(jTextField2.getText().isEmpty()){
+                    jTextField2.setText("+-*/");
+                    jTextField2.setForeground(Color.LIGHT_GRAY);
+                }else{
+                    jTextField2.setForeground(Color.BLACK);
+                }
+            }
+        });
+
+        helpItem4.addActionListener(
                 new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        jframe3.pack();
-                        jframe3.setVisible(true);
+                        autoLog = !autoLog;
+                        updateAutoLog(helpItem4);
+                    }
+                }
+        );
+
+        helpItem5.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        jframe.dispose();
+                    }
+                }
+        );
+
+        helpItem6.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String text = textArea.getText();
+                        int size = 0;
+                        for(String str : text.split("\n")){
+                            size++;
+                        }
+                        JFileChooser fileChooser = new JFileChooser();
+                        fileChooser.setDialogTitle("Save output as ...");
+                        fileChooser.setToolTipText("<html><font face=\"sansserif\">Select the directory you want to save<br>to and enter your desired file name.</font></html>");
+                        fileChooser.setApproveButtonText("Save file at specified location");
+                        fileChooser.setFileHidingEnabled(false);
+                        fileChooser.setMultiSelectionEnabled(false);
+                        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                        fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+                        fileChooser.setSelectedFile(new File("out.txt"));
+                        if(size > 1){
+                            if(fileChooser.showSaveDialog(jframe) == JFileChooser.APPROVE_OPTION){
+                                String status = writeTextToFile(fileChooser.getSelectedFile(), text);
+                                if(!status.equals("success")){
+                                    JOptionPane.showConfirmDialog(jframe, "Saving failed:\n" + status, "4eq10GUI", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+                                }
+                            }
+                        }else{
+                            int result;
+                            if(text.length() > 0){
+                                result = JOptionPane.showConfirmDialog(jframe, "There is basically nothing to save.\nDo you still want to save?", "4eq10GUI", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                            }else{
+                                result = JOptionPane.showConfirmDialog(jframe, "There is nothing to save.\nDo you still want to save?", "4eq10GUI", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                            }
+                            if(result == JOptionPane.YES_OPTION){
+                                if(fileChooser.showSaveDialog(jframe) == JFileChooser.APPROVE_OPTION){
+                                    String status = writeTextToFile(fileChooser.getSelectedFile(), text);
+                                    if(!status.equals("success")){
+                                        JOptionPane.showConfirmDialog(jframe, "Saving failed:\n" + status, "4eq10GUI", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
         );
@@ -97,7 +219,7 @@ public class Main {
         jframe2.setResizable(false);
         JLabel j2label = new JLabel();
         j2label.setBorder(new EmptyBorder(10, 20, 0, 20));
-        j2label.setText("by LARLEY © 2022");
+        j2label.setText("by LARLEY © 2022-2023");
         JLabel j2label2 = new JLabel();
         j2label2.setBorder(new EmptyBorder(0, 20, 10, 20));
         j2label2.setText("https://github.com/DevLARLEY");
@@ -109,6 +231,7 @@ public class Main {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         jframe2.pack();
+                        jframe2.setLocationRelativeTo(null);
                         jframe2.setVisible(true);
                     }
                 }
@@ -125,26 +248,114 @@ public class Main {
         jbutton.addActionListener(
                 new ActionListener(){
                     public void actionPerformed(ActionEvent e){
-                        if(jTextField.getText().length() == 4){
-                            start = jTextField.getText().charAt(0) + "#" + jTextField.getText().charAt(1) + "#" + jTextField.getText().charAt(2) + "#" + jTextField.getText().charAt(3);
-                            exclude = jTextField2.getText();
-                            textArea.setText("");
-                            output.clear();
-                            output.addAll(calculate());
-                            for(String out : output){
-                                textArea.setText(textArea.getText() + "Solution found! [ " + out + " ]\n");
+                        String text = jTextField.getText();
+                        if(text.length() == 4){
+                            if(areOnlyNumbers(text)){
+                                start = text.charAt(0) + "#" + text.charAt(1) + "#" + text.charAt(2) + "#" + text.charAt(3);
+                                exclude = jTextField2.getText();
+                                textArea.setText("");
+                                output.clear();
+                                long before = System.nanoTime();
+                                if(jTextField.getForeground().equals(Color.LIGHT_GRAY)){
+                                    JOptionPane.showMessageDialog(null, "Please enter 4 digits!", "4eq10GUI", JOptionPane.ERROR_MESSAGE);
+                                    before = System.nanoTime();
+                                }else{
+                                    if(jTextField2.getText().contains("+-*/")){
+                                        if(!jTextField2.getForeground().equals(Color.LIGHT_GRAY)){
+                                            JOptionPane.showMessageDialog(null, "You can't enter\nmore than 3 excludes!", "4eq10GUI", JOptionPane.ERROR_MESSAGE);
+                                            before = System.nanoTime();
+                                        }else{
+                                            exclude = "";
+                                            before = System.nanoTime();
+                                            output.addAll(calculate());
+                                        }
+                                    }else{
+                                        if(!jTextField2.getForeground().equals(Color.LIGHT_GRAY)){
+                                            before = System.nanoTime();
+                                            output.addAll(calculate());
+                                        }
+                                    }
+                                }
+                                long after = System.nanoTime();
+                                for(String out : output){
+                                    textArea.setText(textArea.getText() + "Solution found! [ " + out + " ]\n");
+                                }
+                                if(autoLog){
+                                    String startString = "===START===[" + text.charAt(0) + text.charAt(1) + text.charAt(2) + text.charAt(3) + "]===[" + exclude.replace("#", "") + "]===";
+                                    if(!stringIsInFile(startString, "4eq10.log")){
+                                        FileOutputStream fos;
+                                        try{
+                                            fos = new FileOutputStream("4eq10.log", true);
+                                            fos.write((startString + "\r\n").getBytes());
+                                            for(String out : output){
+                                                fos.write((out + "\r\n").getBytes());
+                                            }
+                                            String endString = "===END===[" + text.charAt(0) + text.charAt(1) + text.charAt(2) + text.charAt(3) + "]===[" + exclude.replace("#", "") + "]===";
+                                            fos.write((endString + "\r\n").getBytes());
+                                            fos.close();
+                                        }catch (IOException ex){
+                                            throw new RuntimeException(ex);
+                                        }
+                                    }
+                                }
+                                long diff = (long) ((after-before)/1000000.0);
+                                if(output.size() == 1){
+                                    textArea.setText(textArea.getText() + "Found " + output.size() + " solution in " + diff + "ms!");
+                                }else{
+                                    textArea.setText(textArea.getText() + "Found " + output.size() + " solutions in " + diff + "ms!");
+                                }
+                            }else{
+                                JOptionPane.showMessageDialog(null, "Please only enter digits!", "4eq10GUI", JOptionPane.ERROR_MESSAGE);
                             }
-                            textArea.setText(textArea.getText() + output.size() + " Solutions found!\n");
                         }else{
-                            textArea.setText(textArea.getText() + "Please fill out all Number fields!\n");
+                            JOptionPane.showMessageDialog(null, "Please enter 4 digits!", "4eq10GUI", JOptionPane.ERROR_MESSAGE);
                         }
                     }
                 }
         );
 
         jframe.pack();
+        jframe.setLocation(dim.width/2-jframe.getSize().width/2, dim.height/2-jframe.getSize().height/2);
+        jframe.setLocationRelativeTo(null);
         jframe.setVisible(true);
     }
+
+    public static String writeTextToFile(File file, String text){
+        try (PrintWriter out = new PrintWriter(file.getAbsoluteFile())) {
+            out.println(text);
+        } catch (FileNotFoundException ex) {
+            return ex.getMessage();
+        }
+        return "success";
+    }
+
+    public static boolean stringIsInFile(String string, String fileName){
+        File file = new File(fileName);
+        try{
+            Scanner scanner = new Scanner(file);
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                if(line.equals(string))
+                    return true;
+            }
+        }catch(FileNotFoundException ignore){}
+        return false;
+    }
+
+    public static void updateAutoLog(JMenuItem item){
+        item.setText("Auto-Log: " + (autoLog ? "Enabled" : "Disabled"));
+        item.setToolTipText("<html><font face=\"sansserif\">Click to " + (!autoLog ? "Enable" : "Disable") + ".<br>Enables whether the program should<br>automatically log the output in a logfile.</font></html>");
+    }
+
+    public static boolean areOnlyNumbers(String string){
+        for(char ch : string.toCharArray()){
+            if(!Character.isDigit(ch)){
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static ArrayList calculate(){
         solutionList.clear();
         if(start != null){
@@ -314,10 +525,10 @@ public class Main {
                                             }
                                     }
                                     String sol = null;
-                                    try {
+                                    try{
                                         sol = engine.eval(start).toString();
-                                    } catch (ScriptException ex) {
-                                        System.out.println("error");
+                                    }catch(ScriptException ex){
+                                        JOptionPane.showConfirmDialog(jframe, "The ScriptEngine encountered an\nError while calculating.", "4eq10GUI", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
                                     }
                                     if(sol != null){
                                         if(sol.contains("NaN") || sol.contains("Infinity")){
