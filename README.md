@@ -6,5 +6,5 @@ Release compiled using Java JDK 14.0.2. Recommended when compiling yourself.
 
 # Running
 ```sh
-java -jar fourEQtenGUI.jar
+java -jar 4eq10GUI.jar
 ```
