@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Stack;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.swing.border.Border;
@@ -20,15 +21,24 @@ public class Main {
     public static JFrame jframe = new JFrame("4eq10");
     public static String exclude = null;
     public static String start = null;
-    public static ArrayList solutionList = new ArrayList<>();
-    public static ScriptEngineManager manager = new ScriptEngineManager();
-    public static ScriptEngine engine = manager.getEngineByName("js");
+    public static ArrayList<String> sols = new ArrayList<>();
+    public static ScriptEngineManager m = new ScriptEngineManager();
+    public static ScriptEngine p = m.getEngineByName("js");
     public static JTextArea textArea = new JTextArea();
     public static boolean autoLog = false;
     public static int runcount = 0;
     public static JTextField jTextField = new JTextField();
     public static JTextField jTextField2 = new JTextField();
-
+    public static int k(String s, int a){if(s.charAt(a)!='(')return -1;
+        Stack<Integer> st=new Stack<>();for(int i = a; i<s.length(); i++){
+            if(s.charAt(i)=='('){st.push((int)s.charAt(i));}else if(s.charAt(i)==')'){st.pop();if(st.empty())return i;}}return -1;}
+    public static String rrb(String s) throws ScriptException { /* By github.com/DevLARLEY on 2023/7/15 */
+        int j=0;String d=s;try{p.eval(s);}catch(ScriptException x){return null;}int r=d.length()-d.replace("(","").replace(")","").length();
+        for(int b=0;b<r;b++){int o=0;int c=0;for(int a=0;a<s.length();a++){if(j>a)continue;if(s.charAt(a)=='('){o=a;c=k(s,a);break;}}
+            String m=s;if(o<j||m.length()==m.replace("(","").replace(")","").length()){break;}
+            String e=s.substring(0,o)+s.substring(o+1);String f=e.substring(0,c-1)+e.substring(c);
+            if(p.eval(s).toString().equals(p.eval(f).toString())){s=f;}else{j++;}}return s;
+    }
     public static void main(String[] args) throws ScriptException {
         ArrayList<String> output = new ArrayList<>();
 
@@ -76,9 +86,9 @@ public class Main {
         jTextField.setToolTipText("<html><font face=\"sansserif\">Enter 4 numbers</font></html>");
 
         jTextField2.setForeground(Color.LIGHT_GRAY);
-        jTextField2.setText("+-*/");
+        jTextField2.setText("+-*/X");
         jTextField2.setColumns(4);
-        jTextField2.setToolTipText("<html><font face=\"sansserif\">Valid operators to exclude are:<br>+ - * /</font></html>");
+        jTextField2.setToolTipText("<html><font face=\"sansserif\">Valid operators to exclude are:<br>+ - * / X<br>(X = Exclude brackets)</font></html>");
 
         jbutton.setText("Calculate");
         jbutton.setToolTipText("<html><font face=\"sansserif\">Calculate solutions for<br>the input parameters.</font></html>");
@@ -134,7 +144,7 @@ public class Main {
 
             @Override
             public void focusGained(FocusEvent e) {
-                if(jTextField2.getText().contains("+-*/") && jTextField2.getForeground().equals(Color.LIGHT_GRAY)){
+                if(jTextField2.getText().contains("+-*/X") && jTextField2.getForeground().equals(Color.LIGHT_GRAY)){
                     jTextField2.setText(null);
                 }
             }
@@ -142,7 +152,7 @@ public class Main {
             @Override
             public void focusLost(FocusEvent e) {
                 if(jTextField2.getText().isEmpty()){
-                    jTextField2.setText("+-*/");
+                    jTextField2.setText("+-*/X");
                     jTextField2.setForeground(Color.LIGHT_GRAY);
                 }else{
                     jTextField2.setForeground(Color.BLACK);
@@ -165,6 +175,7 @@ public class Main {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         jframe.dispose();
+                        jframe.dispatchEvent(new WindowEvent(jframe, WindowEvent.WINDOW_CLOSING));
                     }
                 }
         );
@@ -260,7 +271,7 @@ public class Main {
                                     JOptionPane.showMessageDialog(null, "Please enter 4 digits!", "4eq10GUI", JOptionPane.ERROR_MESSAGE);
                                     before = System.nanoTime();
                                 }else{
-                                    if(jTextField2.getText().contains("+-*/")){
+                                    if(jTextField2.getText().contains("+-*/X")){
                                         if(!jTextField2.getForeground().equals(Color.LIGHT_GRAY)){
                                             JOptionPane.showMessageDialog(null, "You can't enter\nmore than 3 excludes!", "4eq10GUI", JOptionPane.ERROR_MESSAGE);
                                             before = System.nanoTime();
@@ -356,8 +367,8 @@ public class Main {
         return true;
     }
 
-    public static ArrayList calculate(){
-        solutionList.clear();
+    public static ArrayList calculate() {
+        sols.clear();
         if(start != null){
             for(int a = 0; a < 4; a++){
                 for(int b = 0; b < 4; b++){
@@ -526,7 +537,7 @@ public class Main {
                                     }
                                     String sol = null;
                                     try{
-                                        sol = engine.eval(start).toString();
+                                        sol = p.eval(start).toString();
                                     }catch(ScriptException ex){
                                         JOptionPane.showConfirmDialog(jframe, "The ScriptEngine encountered an\nError while calculating.", "4eq10GUI", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE);
                                     }
@@ -534,12 +545,16 @@ public class Main {
                                         if(sol.contains("NaN") || sol.contains("Infinity")){
                                             sol = "0";
                                         }
-                                    }
-                                    Double solutuo = Double.parseDouble(sol);
-                                    runcount += 1;
-                                    if(solutuo == 10){
-                                        if(!solutionList.contains(start)){
-                                            solutionList.add(start);
+                                        double sol2 = Double.parseDouble(sol);
+                                        runcount += 1;
+                                        if(sol2== 10){
+                                            String r = start;
+                                            try{
+                                                r = rrb(start);
+                                            }catch(ScriptException ignored){}
+                                            if(!sols.contains(r)){
+                                                sols.add(start);
+                                            }
                                         }
                                     }
                                 }
@@ -549,6 +564,6 @@ public class Main {
                 }
             }
         }
-        return solutionList;
+        return sols;
     }
 }
